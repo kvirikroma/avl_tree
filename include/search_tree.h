@@ -32,7 +32,6 @@ typedef struct search_tree_node
     struct {
         void*(*get_value)(struct search_tree_node*);
     } vtbl;
-    uint8_t _value[];
 }
 search_tree_node;
 
@@ -47,22 +46,46 @@ typedef struct search_tree
         void*(*find)(struct search_tree*, void* value);
         void(*insert)(struct search_tree*, void* value);
         bool(*remove)(struct search_tree*, void* value);
-        void(*traversal)(struct search_tree*, traversal_method method, void(*receiver)(void* value, void* params), void* receiver_params);
         void(*deinit)(struct search_tree*);
+        void(*traversal)(
+            struct search_tree*,
+            traversal_method method,
+            void(*receiver)(void* value, void* params),
+            void* receiver_params
+        );
     } vtbl;
 }
 search_tree;
 
 
-void* find(search_tree*, void*);
+void search_tree_init(
+    search_tree* self,
+    unsigned_int_type value_size,
+    int8_t(*comparator)(void*, void*)
+);
 
-void insert(search_tree*, void*);
+search_tree_node* new_search_tree_node(
+    search_tree* tree,
+    unsigned_int_type value_size,
+    void* value,
+    search_tree_node* parent,
+    search_tree_node* left,
+    search_tree_node* right
+);
 
-bool remove(search_tree*, void*);
+void* search_tree_find(search_tree* self, void* value);
 
-void traversal(search_tree*, void(*receiver)(void* value, void* params), void* receiver_params);
+void search_tree_insert(search_tree* self, void* value);
 
-void deinit(search_tree*);
+bool search_tree_remove(search_tree* self, void* value);
+
+void search_tree_traversal(
+    search_tree*,
+    void(*receiver)(void* value, void* params),
+    void* receiver_params
+);
+
+void search_tree_deinit(search_tree* self);
 
 
 #endif
