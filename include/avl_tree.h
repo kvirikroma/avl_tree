@@ -23,7 +23,7 @@ avl_tree;
 void avl_tree_init(
     avl_tree* self,
     unsigned_int_type value_size,
-    int8_t(*comparator)(void*, void*)
+    signed_int_type(*comparator)(void*, void*)
 );
 
 avl_tree* new_avl_tree_node(
