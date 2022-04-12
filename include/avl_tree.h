@@ -37,6 +37,8 @@ avl_tree* new_avl_tree_node(
 
 void avl_tree_insert(avl_tree* self, void* value);
 
-bool avl_tree_remove(avl_tree* self, void* value);
+bool avl_tree_remove_first(avl_tree* self, void* value);
+
+unsigned_int_type avl_tree_remove_all(avl_tree* self, void* value);
 
 #endif

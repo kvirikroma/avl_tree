@@ -44,7 +44,7 @@ void search_tree_init(
     self->value_size = value_size;
 }
 
-static void* search_tree_node_get_value(search_tree_node* self)
+void* search_tree_node_get_value(search_tree_node* self)
 {
     return (void*)(self + 1);
 }
@@ -128,6 +128,7 @@ static void search_traversal(
 {
     if (node && (self->comparator(node->vtbl.get_value(node), value) == 0))
     {
+        // postorder can also be used to delete nodes, not only for search
         search_traversal(self, node->left, value, receiver, receiver_params);
         search_traversal(self, node->right, value, receiver, receiver_params);
         receiver(node->vtbl.get_value(node), receiver_params);
@@ -145,7 +146,122 @@ void search_tree_find_all(
     search_traversal(self, first_node, value, receiver, receiver_params);
 }
 
-void search_tree_insert(search_tree* self, void* value);
+void search_tree_insert(search_tree* self, void* value)
+{
+    search_tree_node* node = self->root;
+    while (node)
+    {
+        signed_int_type comparing_result = self->comparator(node->vtbl.get_value(node), value);
+        if (comparing_result > 0)  // node.get_value() > value
+        {
+            if (node->left)
+            {
+                node = node->left;
+            }
+            else
+            {
+                node->left = new_search_tree_node(self->value_size, value, node, NULL, NULL);
+                node = NULL;
+            }
+        }
+        else  // node.get_value() <= value
+        {
+            if (node->right)
+            {
+                node = node->right;
+            }
+            else
+            {
+                node->right = new_search_tree_node(self->value_size, value, node, NULL, NULL);
+                node = NULL;
+            }
+        }
+    }
+}
+
+static void remove_node_from_tree(search_tree* self, search_tree_node* node)
+{
+    if (node->right)
+    {
+        if (node->left)  // node has both children
+        {
+            search_tree_node* replacement = node->right;
+            while (replacement->left)
+            {
+                replacement = replacement->left;
+            }
+            remove_node_from_tree(self, replacement);
+            replacement->left = node->left;
+            replacement->right = node->right;
+            replacement->parent = node->parent;
+            if (node->left)
+            {
+                node->left->parent = replacement;
+            }
+            if (node->right)
+            {
+                node->right->parent = replacement;
+            }
+            if (node->parent)
+            {
+                if (node->parent->left == node)
+                {
+                    node->parent->left = replacement;
+                }
+                else
+                {
+                    node->parent->right = replacement;
+                }
+            }
+            else
+            {
+                self->root = replacement;
+            }
+        }
+        else  // node has only right child
+        {
+            if (node->parent)
+            {
+                if (node->parent->left == node)
+                {
+                    node->parent->left = node->right;
+                }
+                else
+                {
+                    node->parent->right = node->right;
+                }
+            }
+            else
+            {
+                self->root = node->right;
+            }
+            node->right->parent = node->parent;
+        }
+    }
+    else  // node has only left child or none of them
+    {
+        if (node->parent)
+        {
+            if (node->parent->left == node)
+            {
+                node->parent->left = node->left;
+            }
+            else
+            {
+                node->parent->right = node->left;
+            }
+        }
+        else
+        {
+            self->root = node->left;
+        }
+        if (node->left)  // node has only left child
+        {
+            node->left->parent = node->parent;
+        }
+    }
+    node->left = node->right = node->parent = NULL;
+}
 
 bool search_tree_remove_first(search_tree* self, void* value);
 

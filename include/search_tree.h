@@ -89,6 +89,8 @@ search_tree_node* new_search_tree_node(
     search_tree_node* right
 );
 
+void* search_tree_node_get_value(search_tree_node* self);
+
 void* search_tree_find(search_tree* self, void* value);
 
 void search_tree_find_all(
