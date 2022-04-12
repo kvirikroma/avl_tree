@@ -1,0 +1,6 @@
+[submodule "deque_in_array"]
+	path = deque_in_array
+	url = ../deque_in_array/
+[submodule "submodules/deque_in_array"]
+	path = submodules/deque_in_array
+	url = git@github.com:kvirikroma/deque_in_array.git

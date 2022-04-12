@@ -12,7 +12,6 @@ typedef struct avl_tree_node
 }
 avl_tree_node;
 
-
 typedef struct avl_tree
 {
     avl_tree_node base;

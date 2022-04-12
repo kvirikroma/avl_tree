@@ -14,15 +14,14 @@ typedef uint32_t unsigned_int_type;
 typedef int32_t signed_int_type;
 #endif
 
+
 typedef enum 
 {
-    PREORDER,
-    POSTORDER,
-    INORDER,
-    BY_LEVEL
+    TRAVERSAL_METHOD_PREORDER,
+    TRAVERSAL_METHOD_POSTORDER,
+    TRAVERSAL_METHOD_INORDER
 }
 traversal_method;
-
 
 typedef struct search_tree_node
 {
@@ -34,7 +33,6 @@ typedef struct search_tree_node
     } vtbl;
 }
 search_tree_node;
-
 
 typedef struct search_tree
 {
@@ -81,6 +79,15 @@ bool search_tree_remove(search_tree* self, void* value);
 
 void search_tree_traversal(
     search_tree*,
+    traversal_method method,
+    void(*receiver)(void* value, void* params),
+    void* receiver_params
+);
+
+void search_tree_traversal_by_level(
+    search_tree*,
+    bool include_empty,
+    void* value_for_empty_parts,
     void(*receiver)(void* value, void* params),
     void* receiver_params
 );
