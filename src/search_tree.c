@@ -31,7 +31,7 @@ void search_tree_init(
 {
     self->vtbl.clear = search_tree_clear;
     self->vtbl.deinit = search_tree_deinit;
-    self->vtbl.find = search_tree_find;
+    self->vtbl.find_first = search_tree_find_first;
     self->vtbl.find_all = search_tree_find_all;
     self->vtbl.insert = search_tree_insert;
     self->vtbl.remove_all = search_tree_remove_all;
@@ -81,7 +81,7 @@ void search_tree_deinit(search_tree* self)
     self->comparator = NULL;
     self->vtbl.clear = NULL;
     self->vtbl.deinit = NULL;
-    self->vtbl.find = NULL;
+    self->vtbl.find_first = NULL;
     self->vtbl.find_all = NULL;
     self->vtbl.insert = NULL;
     self->vtbl.remove_all = NULL;
@@ -90,7 +90,7 @@ void search_tree_deinit(search_tree* self)
     self->vtbl.traversal_by_level = NULL;
 }
 
-static search_tree_node* find_first(search_tree* self, void* value)
+static search_tree_node* find_first_node(search_tree* self, void* value)
 {
     search_tree_node* node = self->root;
     while (node)
@@ -112,9 +112,9 @@ static search_tree_node* find_first(search_tree* self, void* value)
     return NULL;
 }
 
-void* search_tree_find(search_tree* self, void* value)
+void* search_tree_find_first(search_tree* self, void* value)
 {
-    search_tree_node* node = find_first(self, value);
+    search_tree_node* node = find_first_node(self, value);
     return node->vtbl.get_value(node);
 }
 
@@ -128,10 +128,9 @@ static void search_traversal(
 {
     if (node && (self->comparator(node->vtbl.get_value(node), value) == 0))
     {
-        // postorder can also be used to delete nodes, not only for search
         search_traversal(self, node->left, value, receiver, receiver_params);
-        search_traversal(self, node->right, value, receiver, receiver_params);
         receiver(node->vtbl.get_value(node), receiver_params);
+        search_traversal(self, node->right, value, receiver, receiver_params);
     }
 }
 
@@ -142,7 +141,7 @@ void search_tree_find_all(
     void* receiver_params
 )
 {
-    search_tree_node* first_node = find_first(self, value);
+    search_tree_node* first_node = find_first_node(self, value);
     search_traversal(self, first_node, value, receiver, receiver_params);
 }
 
@@ -179,7 +178,7 @@ void search_tree_insert(search_tree* self, void* value)
     }
 }
 
-static void remove_node_from_tree(search_tree* self, search_tree_node* node)
+static void remove_node_from_tree(search_tree* self, search_tree_node* node, bool free_memory)
 {
     if (node->right)
     {
@@ -190,7 +189,7 @@ static void remove_node_from_tree(search_tree* self, search_tree_node* node)
             {
                 replacement = replacement->left;
             }
-            remove_node_from_tree(self, replacement);
+            remove_node_from_tree(self, replacement, false);
             replacement->left = node->left;
             replacement->right = node->right;
             replacement->parent = node->parent;
@@ -261,11 +260,45 @@ static void remove_node_from_tree(search_tree* self, search_tree_node* node)
         }
     }
     node->left = node->right = node->parent = NULL;
+    if (free_memory)
+    {
+        free(node);
+    }
 }
 
-bool search_tree_remove_first(search_tree* self, void* value);
+bool search_tree_remove_first(search_tree* self, void* value)
+{
+    search_tree_node* node_to_remove = find_first_node(self, value);
+    if (!node_to_remove)
+    {
+        return false;
+    }
+    remove_node_from_tree(self, node_to_remove, true);
+    return true;
+}
 
-unsigned_int_type search_tree_remove_all(search_tree* self, void* value);
+static void deletion_traversal(
+    search_tree* self,
+    search_tree_node* node,
+    void* value,
+    unsigned_int_type* counter
+)
+{
+    if (node && (self->comparator(node->vtbl.get_value(node), value) == 0))
+    {
+        deletion_traversal(self, node->left, value, counter);
+        deletion_traversal(self, node->right, value, counter);
+        remove_node_from_tree(self, node, true);
+        counter++;
+    }
+}
+
+unsigned_int_type search_tree_remove_all(search_tree* self, void* value)
+{
+    unsigned_int_type counter = 0;
+    deletion_traversal(self, find_first_node(self, value), value, &counter);
+    return counter;
+}
 
 static void traversal_for_nodes(
     search_tree_node* node,

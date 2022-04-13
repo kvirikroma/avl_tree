@@ -37,7 +37,7 @@ search_tree_node;
 typedef struct search_tree
 {
     search_tree_node* root;
-    unsigned_int_type value_size;
+    size_t value_size;
     unsigned_int_type nodes_count;
     // comparator should return n where:
     // n>0 if item1>item2,
@@ -45,7 +45,7 @@ typedef struct search_tree
     // n<0 if item1<item2
     signed_int_type(*comparator)(void*, void*);
     struct {
-        void*(*find)(struct search_tree*, void* value);
+        void*(*find_first)(struct search_tree*, void* value);
         void(*insert)(struct search_tree*, void* value);
         bool(*remove_first)(struct search_tree*, void* value);
         unsigned_int_type(*remove_all)(struct search_tree*, void* value);
@@ -77,12 +77,12 @@ search_tree;
 
 void search_tree_init(
     search_tree* self,
-    unsigned_int_type value_size,
+    size_t value_size,
     signed_int_type(*comparator)(void*, void*)
 );
 
 search_tree_node* new_search_tree_node(
-    unsigned_int_type value_size,
+    size_t value_size,
     void* value,
     search_tree_node* parent,
     search_tree_node* left,
@@ -91,7 +91,7 @@ search_tree_node* new_search_tree_node(
 
 void* search_tree_node_get_value(search_tree_node* self);
 
-void* search_tree_find(search_tree* self, void* value);
+void* search_tree_find_first(search_tree* self, void* value);
 
 void search_tree_find_all(
     search_tree* self,
