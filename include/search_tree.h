@@ -30,6 +30,7 @@ typedef struct search_tree_node
     struct search_tree_node* right;
     struct {
         void*(*get_value)(struct search_tree_node*);
+        size_t(*get_depth)(struct search_tree_node*);
     } vtbl;
 }
 search_tree_node;
@@ -91,6 +92,8 @@ search_tree_node* new_search_tree_node(
 
 void* search_tree_node_get_value(search_tree_node* self);
 
+size_t search_tree_node_get_depth(search_tree_node* self);
+
 void* search_tree_find_first(search_tree* self, void* value);
 
 void search_tree_find_all(
@@ -113,7 +116,8 @@ void search_tree_traversal(
     void* receiver_params
 );
 
-void search_tree_traversal_by_level(
+// @return number of levels in tree
+size_t search_tree_traversal_by_level(
     search_tree* self,
     bool include_empty,
     void* value_for_empty_parts,

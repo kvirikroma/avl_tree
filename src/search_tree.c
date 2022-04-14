@@ -25,7 +25,7 @@ static void node_receiver_for_deletion(search_tree_node* node, void* params)
 
 void search_tree_init(
     search_tree* self,
-    unsigned_int_type value_size,
+    size_t value_size,
     signed_int_type(*comparator)(void*, void*)
 )
 {
@@ -49,8 +49,20 @@ void* search_tree_node_get_value(search_tree_node* self)
     return (void*)(self + 1);
 }
 
+size_t search_tree_node_get_depth(search_tree_node* self)
+{
+    size_t result = 0;
+    search_tree_node* current_node = self;
+    while (current_node->parent)
+    {
+        current_node = current_node->parent;
+        result++;
+    }
+    return result;
+}
+
 search_tree_node* new_search_tree_node(
-    unsigned_int_type value_size,
+    size_t value_size,
     void* value,
     search_tree_node* parent,
     search_tree_node* left,
@@ -61,6 +73,7 @@ search_tree_node* new_search_tree_node(
         sizeof(search_tree_node) + value_size
     );
     result->vtbl.get_value = search_tree_node_get_value;
+    result->vtbl.get_depth = search_tree_node_get_depth;
     result->parent = parent;
     result->left = left;
     result->right = right;
@@ -355,10 +368,50 @@ void search_tree_traversal(
     traversal_for_nodes(self->root, method, node_receiver_for_traversal, &params);
 }
 
-void search_tree_traversal_by_level(
-    search_tree*,
+size_t search_tree_traversal_by_level(
+    search_tree* self,
     bool include_empty,
     void* value_for_empty_parts,
     void(*receiver)(void* value, void* params),
     void* receiver_params
-);
+)
+{
+    if (!self->root)
+    {
+        return;
+    }
+    search_tree_node* null_node = NULL;
+    search_tree_node* current_node = NULL;
+    search_tree_node* last_node = NULL;
+    deque nodes_queue;
+    deque_init(&nodes_queue, NULL, 0, sizeof(search_tree_node*));
+    deque_push_right(&nodes_queue, &(self->root));
+    while (deque_can_pop(&nodes_queue))
+    {
+        deque_pop_left(&nodes_queue, (deque_item*)&current_node);
+        if (current_node)
+        {
+            last_node = current_node;
+            if (current_node->left || include_empty)
+            {
+                deque_push_right(&nodes_queue, (deque_item*)&(current_node->left));
+            }
+            if (current_node->right || include_empty)
+            {
+                deque_push_right(&nodes_queue, (deque_item*)&(current_node->right));
+            }
+            receiver(current_node->vtbl.get_value(current_node), receiver_params);
+        }
+        else if (include_empty)
+        {
+            deque_push_right(&nodes_queue, &null_node);
+            receiver(value_for_empty_parts, receiver_params);
+        }
+    }
+    deque_delete(&nodes_queue);
+    if (!last_node)
+    {
+        return 0;
+    }
+    return last_node->vtbl.get_depth(last_node) + 1;
+}
