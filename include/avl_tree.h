@@ -6,16 +6,14 @@
 
 typedef struct avl_tree_node
 {
-    search_tree_node base;
+    search_tree_node super;
     int8_t disbalance;
-    struct {} vtbl;
 }
 avl_tree_node;
 
 typedef struct avl_tree
 {
-    avl_tree_node base;
-    struct {} vtbl;
+    avl_tree_node super;
 }
 avl_tree;
 

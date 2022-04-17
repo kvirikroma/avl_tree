@@ -1,7 +1,5 @@
 #include <stdio.h>
 
-#include "submodules/deque_in_array/include/deque.h"
-
 #include "include/avl_tree.h"
 
 #define ITEM_TYPE uint64_t
@@ -66,8 +64,7 @@ int main()
     {
         ITEM_TYPE new_item;
         get_random_data(&new_item, sizeof(new_item));
-        tree.vtbl.insert(&tree, &new_item);
+        ((abstract_tree*)&tree)->vtbl->insert(((abstract_tree*)&tree), &new_item);
     }
-    deque tree_structure_storage;
     //...
 }
